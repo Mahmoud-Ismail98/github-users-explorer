@@ -32,9 +32,29 @@ export default function UsersList() {
     fetchUsers()
   }, [])
 
+  const totalPages = Math.ceil(users.length / usersPerPage)
   const startIndex = (currentPage - 1) * usersPerPage
   const paginatedUsers = users.slice(startIndex, startIndex + usersPerPage)
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  const handleFirstPage = () => {
+    setCurrentPage(1)
+  }
+
+  const handleLastPage = () => {
+    setCurrentPage(totalPages)
+  }
 
   if (loading) {
     return <p>Loading...</p>
@@ -52,6 +72,39 @@ export default function UsersList() {
             </a>
           </div>
         ))}
+      </div>
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handleFirstPage}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          First
+        </button>
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+        <button
+          onClick={handleLastPage}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Last
+        </button>
       </div>
     </div>
   )
