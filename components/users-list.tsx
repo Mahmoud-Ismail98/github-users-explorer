@@ -37,15 +37,11 @@ export default function UsersList() {
   const paginatedUsers = users.slice(startIndex, startIndex + usersPerPage)
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-    }
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
   }
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
   }
 
   const handleFirstPage = () => {
