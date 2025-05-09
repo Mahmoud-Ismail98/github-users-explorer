@@ -13,6 +13,7 @@ export default function UsersList() {
   const [users, setUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("") // حالة لتخزين نص البحث
   const usersPerPage = 5
 
   useEffect(() => {
@@ -32,9 +33,14 @@ export default function UsersList() {
     fetchUsers()
   }, [])
 
-  const totalPages = Math.ceil(users.length / usersPerPage)
+  // تصفية المستخدمين بناءً على نص البحث
+  const filteredUsers = users.filter((user) =>
+    user.login.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
   const startIndex = (currentPage - 1) * usersPerPage
-  const paginatedUsers = users.slice(startIndex, startIndex + usersPerPage)
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage)
 
   const handleNextPage = () => {
     setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
@@ -57,8 +63,15 @@ export default function UsersList() {
   }
 
   return (
-    <div className="space-y-6 mt-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6 mt-6 ">
+      <input
+        type="text"
+        placeholder="Search users..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full px-4 py-4 border rounded-md "
+      />
+      <div className="grid gap-4  md:grid-cols-2 lg:grid-cols-3">
         {paginatedUsers.map((user) => (
           <div key={user.id} className="border rounded-lg p-4">
             <img src={user.avatar_url} alt={user.login} className="h-12 w-12 rounded-full" />
