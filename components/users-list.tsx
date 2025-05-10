@@ -15,7 +15,7 @@ export default function UsersList() {
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const usersPerPage = 5
+  const usersPerPage = 10
 
   // Zustand store actions
   const { favorites, addFavorite, removeFavorite } = useUserStore()

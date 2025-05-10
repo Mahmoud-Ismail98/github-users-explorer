@@ -34,6 +34,3 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 }))
 
-// useEffect(() => {
-//   useUserStore.getState().hydrate()
-// }, [])
