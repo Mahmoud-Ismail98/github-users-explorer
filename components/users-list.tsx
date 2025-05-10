@@ -11,9 +11,10 @@ interface User {
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([])
+  const [favorites, setFavorites] = useState<number[]>([]) // حالة لتتبع المستخدمين المفضلين
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("") // حالة لتخزين نص البحث
+  const [searchQuery, setSearchQuery] = useState("")
   const usersPerPage = 5
 
   useEffect(() => {
@@ -33,7 +34,6 @@ export default function UsersList() {
     fetchUsers()
   }, [])
 
-  // تصفية المستخدمين بناءً على نص البحث
   const filteredUsers = users.filter((user) =>
     user.login.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -58,20 +58,28 @@ export default function UsersList() {
     setCurrentPage(totalPages)
   }
 
+  const toggleFavorite = (userId: number) => {
+    setFavorites((prevFavorites) =>
+      prevFavorites.includes(userId)
+        ? prevFavorites.filter((id) => id !== userId) // إزالة من المفضلة
+        : [...prevFavorites, userId] // إضافة إلى المفضلة
+    )
+  }
+
   if (loading) {
     return <p>Loading...</p>
   }
 
   return (
-    <div className="space-y-6 mt-6 ">
+    <div className="space-y-6 mt-6">
       <input
         type="text"
         placeholder="Search users..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-4 py-4 border rounded-md "
+        className="w-full px-4 py-2 border rounded-md mb-4"
       />
-      <div className="grid gap-4  md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {paginatedUsers.map((user) => (
           <div key={user.id} className="border rounded-lg p-4">
             <img src={user.avatar_url} alt={user.login} className="h-12 w-12 rounded-full" />
@@ -79,6 +87,14 @@ export default function UsersList() {
             <a href={user.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
               View Profile
             </a>
+            <button
+              onClick={() => toggleFavorite(user.id)}
+              className={`mt-2 px-4 py-2 rounded ${
+                favorites.includes(user.id) ? "bg-yellow-400" : "bg-gray-200"
+              }`}
+            >
+              {favorites.includes(user.id) ? "⭐ Unfavorite" : "⭐ Favorite"}
+            </button>
           </div>
         ))}
       </div>
