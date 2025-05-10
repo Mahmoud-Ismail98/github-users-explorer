@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useUserStore } from "@/store/users"
 
 interface User {
   id: number
@@ -11,11 +12,13 @@ interface User {
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([])
-  const [favorites, setFavorites] = useState<number[]>([]) // حالة لتتبع المستخدمين المفضلين
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const usersPerPage = 5
+
+  // Zustand store actions
+  const { favorites, addFavorite, removeFavorite } = useUserStore()
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,12 +61,12 @@ export default function UsersList() {
     setCurrentPage(totalPages)
   }
 
-  const toggleFavorite = (userId: number) => {
-    setFavorites((prevFavorites) =>
-      prevFavorites.includes(userId)
-        ? prevFavorites.filter((id) => id !== userId) // إزالة من المفضلة
-        : [...prevFavorites, userId] // إضافة إلى المفضلة
-    )
+  const toggleFavorite = (user: User) => {
+    if (favorites.some((fav) => fav.id === user.id)) {
+      removeFavorite(user.id) 
+    } else {
+      addFavorite(user) 
+    }
   }
 
   if (loading) {
@@ -88,12 +91,12 @@ export default function UsersList() {
               View Profile
             </a>
             <button
-              onClick={() => toggleFavorite(user.id)}
+              onClick={() => toggleFavorite(user)}
               className={`mt-2 px-4 py-2 rounded ${
-                favorites.includes(user.id) ? "bg-yellow-400" : "bg-gray-200"
+                favorites.some((fav) => fav.id === user.id) ? "bg-yellow-400" : "bg-gray-200"
               }`}
             >
-              {favorites.includes(user.id) ? "⭐ Unfavorite" : "⭐ Favorite"}
+              {favorites.some((fav) => fav.id === user.id) ? "⭐ Unfavorite" : "⭐ Favorite"}
             </button>
           </div>
         ))}
