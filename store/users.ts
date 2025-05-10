@@ -11,16 +11,29 @@ interface UserStore {
   favorites: User[]
   addFavorite: (user: User) => void
   removeFavorite: (userId: number) => void
+  hydrate: () => void
 }
 
 export const useUserStore = create<UserStore>((set) => ({
   favorites: [],
   addFavorite: (user) =>
-    set((state) => ({
-      favorites: [...state.favorites, user],
-    })),
+    set((state) => {
+      const updatedFavorites = [...state.favorites, user]
+      localStorage.setItem("favorites", JSON.stringify(updatedFavorites))
+      return { favorites: updatedFavorites }
+    }),
   removeFavorite: (userId) =>
-    set((state) => ({
-      favorites: state.favorites.filter((user) => user.id !== userId),
-    })),
+    set((state) => {
+      const updatedFavorites = state.favorites.filter((user) => user.id !== userId)
+      localStorage.setItem("favorites", JSON.stringify(updatedFavorites))
+      return { favorites: updatedFavorites }
+    }),
+  hydrate: () => {
+    const storedFavorites = JSON.parse(localStorage.getItem("favorites") || "[]")
+    set({ favorites: storedFavorites })
+  },
 }))
+
+// useEffect(() => {
+//   useUserStore.getState().hydrate()
+// }, [])

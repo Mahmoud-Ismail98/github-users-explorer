@@ -2,9 +2,14 @@
 
 import Navbar from "@/components/navbar"
 import { useUserStore } from "@/store/users"
+import { useEffect } from "react"
 
 export default function Favorites() {
-  const { favorites } = useUserStore()
+  const { favorites, hydrate } = useUserStore()
+
+  useEffect(() => {
+    hydrate() 
+  }, [])
 
   return (
     <>
