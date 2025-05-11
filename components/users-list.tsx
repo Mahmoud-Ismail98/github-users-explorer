@@ -2,130 +2,95 @@
 
 import { useEffect, useState } from "react"
 import { useUserStore } from "@/store/users"
-
-interface User {
-  id: number
-  login: string
-  avatar_url: string
-  html_url: string
-}
+import { UserCard } from "./user-card"
+import { Alert, AlertDescription } from "./ui/alert"
+import { AlertCircle, Loader2 } from "lucide-react"
+import { Skeleton } from "./ui/skeleton"
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 
 export default function UsersList() {
-  const [users, setUsers] = useState<User[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const usersPerPage = 10
+  const { users, loading, error, fetchUsers, loadMoreUsers, searchQuery, favorites } = useUserStore()
+  const [mounted, setMounted] = useState(false)
 
-  // Zustand store actions
-  const { favorites, addFavorite, removeFavorite, searchQuery } = useUserStore()
+  const { targetRef } = useInfiniteScroll(() => {
+    if (!searchQuery && mounted && !loading) {
+      loadMoreUsers()
+    }
+  })
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch("https://api.github.com/users")
-        const data = await response.json()
-        setUsers(data)
-      } catch (error) {
-        console.error("Error fetching users:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
+    setMounted(true)
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
-  const filteredUsers = users.filter((user) =>
-    user.login.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
-  const startIndex = (currentPage - 1) * usersPerPage
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage)
-
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
+  if (!mounted) {
+    return <UsersListSkeleton />
   }
 
-  const handlePreviousPage = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
+  if (error) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
   }
 
-  const handleFirstPage = () => {
-    setCurrentPage(1)
-  }
-
-  const handleLastPage = () => {
-    setCurrentPage(totalPages)
-  }
-
-  const toggleFavorite = (user: User) => {
-    if (favorites.some((fav) => fav.id === user.id)) {
-      removeFavorite(user.id)
-    } else {
-      addFavorite(user)
-    }
-  }
-
-  if (loading) {
-    return <p>Loading...</p>
-  }
+  const filteredUsers = searchQuery
+    ? users.filter((user) => user.login.toLowerCase().includes(searchQuery.toLowerCase()))
+    : users
 
   return (
     <div className="space-y-6 mt-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {paginatedUsers.map((user) => (
-          <div key={user.id} className="border rounded-lg p-4">
-            <img src={user.avatar_url} alt={user.login} className="h-12 w-12 rounded-full" />
-            <h3 className="font-medium">{user.login}</h3>
-            <a href={user.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-              View Profile
-            </a>
-            <button
-              onClick={() => toggleFavorite(user)}
-              className={`mt-2 px-4 py-2 rounded ${
-                favorites.some((fav) => fav.id === user.id) ? "bg-yellow-400" : "bg-gray-200"
-              }`}
-            >
-              {favorites.some((fav) => fav.id === user.id) ? "⭐ Unfavorite" : "⭐ Favorite"}
-            </button>
+      {filteredUsers.length === 0 && !loading ? (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-medium mb-2">No users found</h2>
+          <p className="text-muted-foreground">Try adjusting your search or filters</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filteredUsers.map((user, index) => (
+              <UserCard
+                key={`${user.id}-${index}`}
+                user={user}
+                showFavoriteButton={true}
+                isFavorite={favorites.some((fav) => fav.id === user.id)}
+              />
+            ))}
+          </div>
+
+          <div ref={targetRef} className="py-8 flex justify-center">
+            {loading && (
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading more users...</span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function UsersListSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+      {Array(6)
+        .fill(0)
+        .map((_, i) => (
+          <div key={i} className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-center space-x-3">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[150px]" />
+                <Skeleton className="h-4 w-[100px]" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-full" />
           </div>
         ))}
-      </div>
-      <div className="flex justify-between mt-4">
-        <button
-          onClick={handleFirstPage}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          First
-        </button>
-        <button
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="px-4 py-2">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-        <button
-          onClick={handleLastPage}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Last
-        </button>
-      </div>
     </div>
   )
 }
