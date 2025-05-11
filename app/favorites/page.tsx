@@ -1,6 +1,4 @@
 "use client"
-
-import Navbar from "@/components/navbar"
 import { useUserStore } from "@/store/users"
 import { useEffect } from "react"
 
@@ -13,7 +11,6 @@ export default function Favorites() {
 
   return (
     <>
-      <Navbar />
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Favorites</h1>
         {favorites.length === 0 ? (
