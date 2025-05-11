@@ -9,9 +9,13 @@ interface User {
 
 interface UserStore {
   favorites: User[]
+  searchQuery: string
+
   addFavorite: (user: User) => void
   removeFavorite: (userId: number) => void
   hydrate: () => void
+  setSearchQuery: (query: string) => void
+
 }
 
 export const useUserStore = create<UserStore>((set) => ({
@@ -31,6 +35,9 @@ export const useUserStore = create<UserStore>((set) => ({
   hydrate: () => {
     const storedFavorites = JSON.parse(localStorage.getItem("favorites") || "[]")
     set({ favorites: storedFavorites })
+  },
+  setSearchQuery: (query) => {
+    set({ searchQuery: query })
   },
 }))
 

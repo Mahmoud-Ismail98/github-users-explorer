@@ -1,6 +1,7 @@
 "use client"
 import { useUserStore } from "@/store/users"
 import { useEffect } from "react"
+import SearchBar from "@/components/search-bar"
 
 export default function Favorites() {
   const { favorites, hydrate } = useUserStore()
@@ -13,6 +14,7 @@ export default function Favorites() {
     <>
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Favorites</h1>
+        <SearchBar />
         {favorites.length === 0 ? (
           <p className="text-center text-gray-500">No favorites added yet.</p>
         ) : (

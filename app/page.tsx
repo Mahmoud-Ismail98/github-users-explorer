@@ -1,12 +1,13 @@
 import { Suspense } from "react"
 import UsersList from "@/components/users-list"
-import Navbar from "@/components/navbar"
+import SearchBar from "@/components/search-bar"
 
 export default function Home() {
   return (
     <>
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">GitHub Users</h1>
+        <SearchBar />
         <Suspense fallback={<UsersListSkeleton />}>
           <UsersList />
         </Suspense>

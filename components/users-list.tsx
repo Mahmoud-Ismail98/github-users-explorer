@@ -14,11 +14,10 @@ export default function UsersList() {
   const [users, setUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
   const usersPerPage = 10
 
   // Zustand store actions
-  const { favorites, addFavorite, removeFavorite } = useUserStore()
+  const { favorites, addFavorite, removeFavorite, searchQuery } = useUserStore()
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -63,9 +62,9 @@ export default function UsersList() {
 
   const toggleFavorite = (user: User) => {
     if (favorites.some((fav) => fav.id === user.id)) {
-      removeFavorite(user.id) 
+      removeFavorite(user.id)
     } else {
-      addFavorite(user) 
+      addFavorite(user)
     }
   }
 
@@ -75,13 +74,6 @@ export default function UsersList() {
 
   return (
     <div className="space-y-6 mt-6">
-      <input
-        type="text"
-        placeholder="Search users..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-4 py-2 border rounded-md mb-4"
-      />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {paginatedUsers.map((user) => (
           <div key={user.id} className="border rounded-lg p-4">
