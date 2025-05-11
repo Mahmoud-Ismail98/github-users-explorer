@@ -2,8 +2,11 @@
 
 A React application that fetches and displays GitHub users with search functionality, favorites management, and infinite scrolling.
 
-![GitHub Users Explorer Screenshot](/github-users-explorer/public/Screenshot_1.png?height=400&width=800)
-![GitHub Users Explorer Screenshot](/github-users-explorer/public/Screenshot_2.png?height=400&width=800)
+![GitHub Users Explorer Screenshot](/public/Screenshot_1.png?height=400&width=800)
+
+----------------------------------
+
+![GitHub Users Explorer Screenshot](/public/Screenshot_2.png?height=400&width=800)
 
 ## Features
 
