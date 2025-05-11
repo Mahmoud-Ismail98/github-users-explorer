@@ -6,11 +6,14 @@ interface UserState {
   users: User[]
   favorites: User[]
   loading: boolean
+  isInitialLoading: boolean
   error: string | null
   currentPage: number
   totalPages: number
   usersPerPage: number
   searchQuery: string
+  retryCount: number
+  maxRetries: number
 
   fetchUsers: (loadMore?: boolean) => Promise<void>
   setCurrentPage: (page: number) => void
@@ -18,6 +21,7 @@ interface UserState {
   removeFavorite: (userId: number) => void
   setSearchQuery: (query: string) => void
   loadMoreUsers: () => void
+  retryFetch: () => Promise<void>
 }
 
 export const useUserStore = create<UserState>()(
@@ -26,19 +30,22 @@ export const useUserStore = create<UserState>()(
       users: [],
       favorites: [],
       loading: false,
+      isInitialLoading: true,
       error: null,
       currentPage: 1,
       totalPages: 1,
       usersPerPage: 10,
       searchQuery: "",
+      retryCount: 0,
+      maxRetries: 3,
 
       fetchUsers: async (loadMore = false) => {
         const { currentPage, usersPerPage, users: existingUsers } = get()
 
         set((state) => ({
           loading: true,
+          isInitialLoading: state.users.length === 0,
           error: null,
-          // Only reset users if we're not loading more
           users: loadMore ? state.users : [],
         }))
 
@@ -53,7 +60,14 @@ export const useUserStore = create<UserState>()(
           const response = await fetch(`https://api.github.com/users?per_page=${usersPerPage}&since=${since}`)
 
           if (!response.ok) {
-            throw new Error("Failed to fetch users")
+            
+            if (response.status === 403) {
+              throw new Error("API rate limit exceeded. Please try again later.")
+            } else if (response.status === 404) {
+              throw new Error("Resource not found. Please check your request.")
+            } else {
+              throw new Error(`Failed to fetch users: HTTP ${response.status}`)
+            }
           }
 
           const newUsers = await response.json()
@@ -71,15 +85,19 @@ export const useUserStore = create<UserState>()(
           set((state) => ({
             users: loadMore ? [...state.users, ...newUsers] : newUsers,
             loading: false,
+            isInitialLoading: false,
             totalPages,
+            retryCount: 0, // Reset retry count on success
             // Increment current page if loading more
             currentPage: loadMore ? state.currentPage + 1 : state.currentPage,
           }))
         } catch (error) {
-          set({
+          set((state) => ({
             loading: false,
+            isInitialLoading: false,
             error: error instanceof Error ? error.message : "An unknown error occurred",
-          })
+            retryCount: loadMore ? state.retryCount : 0, // Only reset retry count if not loading more
+          }))
         }
       },
 
@@ -104,9 +122,24 @@ export const useUserStore = create<UserState>()(
       },
 
       loadMoreUsers: () => {
-        const { loading } = get()
-        if (!loading) {
+        const { loading, error } = get()
+        if (!loading && !error) {
           get().fetchUsers(true)
+        }
+      },
+
+      retryFetch: async () => {
+        const { retryCount, maxRetries } = get()
+
+        if (retryCount < maxRetries) {
+          set((state) => ({ retryCount: state.retryCount + 1 }))
+          await get().fetchUsers()
+        } else {
+          set({
+            error: "Maximum retry attempts reached. Please try again later.",
+            loading: false,
+            isInitialLoading: false,
+          })
         }
       },
     }),
